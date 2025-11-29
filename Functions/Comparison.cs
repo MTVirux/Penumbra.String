@@ -86,4 +86,36 @@ public static unsafe partial class ByteStringFunctions
     /// </summary>
     private static bool Equal(byte* lhs, byte* rhs, int maxLength = int.MaxValue)
         => Compare(lhs, rhs, maxLength) == 0;
+
+    /// <summary>
+    /// Check if two strings are equal with case-insensitive wildcard support.
+    /// Treats '*' as a wildcard matching zero or more characters.
+    /// </summary>
+    public static bool EqualsCiWildcard(string a, string b)
+    {
+        // If they are exactly equal ignoring case, quick accept.
+        if (string.Equals(a, b, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // If a contains wildcard, treat it as pattern.
+        if (!string.IsNullOrEmpty(a) && a.Contains('*'))
+            return WildcardMatchCi(a, b);
+
+        // If b contains wildcard, treat it as pattern.
+        if (!string.IsNullOrEmpty(b) && b.Contains('*'))
+            return WildcardMatchCi(b, a);
+
+        return false;
+    }
+
+    /// <summary>
+    /// Check if a pattern (with wildcards) matches a text string, case-insensitive.
+    /// Pattern: the wildcard pattern
+    /// Text: the text to match against
+    /// </summary>
+    private static bool WildcardMatchCi(string pattern, string text)
+    {
+        var regexPattern = "^" + System.Text.RegularExpressions.Regex.Escape(pattern).Replace("\\*", ".*") + "$";
+        return System.Text.RegularExpressions.Regex.IsMatch(text, regexPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    }
 }
